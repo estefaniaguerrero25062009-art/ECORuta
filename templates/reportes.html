@@ -8,7 +8,6 @@
 <body>
   <div class="header">
     <h1>🌿 ECORuta — Reportes ciudadanos</h1>
-    <!-- Corrección #12: nombre usuario en header -->
     <div class="header-user">
       👤 <strong>{{ usuario }}</strong>
       <span class="badge-rol">{{ rol }}</span>
@@ -16,10 +15,7 @@
     </div>
   </div>
   <div class="container">
-    <!-- Corrección #11: ciudadano solo ve sus propios reportes (filtrado en app.py) -->
-    <h2>
-      {% if rol == "ciudadano" %}Mis reportes{% else %}Reportes de la comunidad{% endif %}
-    </h2>
+    <h2>{% if rol == "ciudadano" %}Mis reportes{% else %}Reportes de la comunidad{% endif %}</h2>
     <a class="btn-verde" href="/agregar_reporte">＋ Agregar reporte</a>
     <table>
       <thead>
@@ -29,9 +25,8 @@
           <th>Fecha</th>
           <th>Estado</th>
           <th>Ciudadano</th>
-          <!-- Corrección #10: columna respuesta para que ciudadano vea la respuesta -->
           <th>Respuesta</th>
-          {% if rol == "admin" %}<th>Acción</th>{% endif %}
+          {% if rol == "admin" %}<th>Acciones</th>{% endif %}
         </tr>
       </thead>
       <tbody>
@@ -42,12 +37,14 @@
           <td>{{ r.fecha }}</td>
           <td class="estado-{{ r.estado }}">{{ r.estado }}</td>
           <td>{{ r.ciudadano.nombre }}</td>
-          <!-- Corrección #10: mostrar respuesta del admin -->
           <td>{{ r.respuesta if r.respuesta else '—' }}</td>
           {% if rol == "admin" %}
           <td>
-            <!-- Corrección #9: solo admin puede responder -->
             <a class="btn-edit" href="/responder_reporte/{{ r._id }}">💬 Responder</a>
+            <form method="POST" action="/eliminar_reporte/{{ r._id }}" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar este reporte?')">
+              <button class="btn-del" type="submit">🗑️ Eliminar</button>
+            </form>
           </td>
           {% endif %}
         </tr>
@@ -59,7 +56,6 @@
       </tbody>
     </table>
 
-    <!-- Corrección #17: paginación -->
     <div class="paginacion">
       {% if page > 1 %}
         <a href="/reportes?page={{ page - 1 }}" class="btn-page">← Anterior</a>
