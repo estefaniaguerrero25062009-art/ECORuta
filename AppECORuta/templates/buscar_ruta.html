@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ECORuta — Buscar ruta</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>🌿 ECORuta — Buscar ruta</h1>
+    <div class="header-user">
+      👤 <strong>{{ usuario }}</strong>
+      <span class="badge-rol">{{ rol }}</span>
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="container">
+    <h2>Buscar ruta</h2>
+    <!-- Corrección #16: búsqueda por nombre, zona Y colonia -->
+    <p class="search-hint">Puedes buscar por <strong>nombre de ruta</strong>, <strong>zona</strong> o <strong>colonia</strong>.</p>
+    <form method="POST">
+      <div class="search-bar">
+        <input type="text" name="valor" placeholder="Escribe nombre, zona o colonia..." required>
+        <button type="submit">Buscar</button>
+      </div>
+    </form>
+    {% if mensaje %}
+      <p class="mensaje">{{ mensaje }}</p>
+    {% endif %}
+    {% if resultados %}
+      <h2>Resultados encontrados</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Zona</th>
+            <th>Horario</th>
+            <th>Colonias</th>
+            <th>Frecuencia</th>
+            <th>Distancia (km)</th>
+            {% if rol == "admin" %}<th>Acciones</th>{% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in resultados %}
+          <tr>
+            <td>{{ r.nombre }}</td>
+            <td>{{ r.zona }}</td>
+            <td>{{ r.horario }}</td>
+            <td>{{ r.colonias }}</td>
+            <td>{{ r.frecuencia or '—' }}</td>
+            <td>{{ r.distancia or '—' }}</td>
+            {% if rol == "admin" %}
+            <td>
+              <a class="btn-edit" href="/editar_ruta/{{ r._id }}">✏️ Editar</a>
+              <form method="POST" action="/eliminar_ruta/{{ r._id }}" style="display:inline"
+                    onsubmit="return confirm('¿Eliminar esta ruta?')">
+                <button class="btn-del" type="submit">🗑️ Eliminar</button>
+              </form>
+            </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+    <a class="back" href="/">← Volver al inicio</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ECORuta — Agregar reporte</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>🌿 ECORuta — Agregar reporte</h1>
+    {% if usuario %}
+    <div class="header-user">
+      👤 <strong>{{ usuario }}</strong>
+      <span class="badge-rol">{{ rol }}</span>
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+    {% endif %}
+  </div>
+  <div class="container">
+    <h2>Nuevo reporte ciudadano</h2>
+    {% if error %}<p class="mensaje-error">{{ error }}</p>{% endif %}
+    <form method="POST">
+      <label>Colonia:</label>
+      <input type="text" name="colonia" placeholder="Ej. Col. Hidalgo" required>
+      <label>Descripción del problema:</label>
+      <input type="text" name="descripcion" placeholder="Ej. Basura acumulada tres días" required>
+      <label>Fecha:</label>
+      <input type="date" name="fecha" required>
+      <label>Tu nombre:</label>
+      <input type="text" name="nombre" placeholder="Nombre completo" required>
+      <label>Teléfono:</label>
+      <input type="text" name="telefono" placeholder="Ej. 7121000001" required>
+      <button type="submit">Enviar reporte</button>
+    </form>
+    <a class="back" href="/reportes">← Volver a reportes</a>
+  </div>
+</body>
+</html>

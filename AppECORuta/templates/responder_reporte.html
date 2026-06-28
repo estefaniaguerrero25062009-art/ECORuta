@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ECORuta — Responder reporte</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>🌿 ECORuta — Responder reporte</h1>
+    <div class="header-user">
+      👤 <strong>{{ usuario }}</strong>
+      <span class="badge-rol">{{ rol }}</span>
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="container">
+    <h2>Detalle del reporte</h2>
+    <table>
+      <tr><th>Colonia</th><td>{{ reporte.colonia }}</td></tr>
+      <tr><th>Descripción</th><td>{{ reporte.descripcion }}</td></tr>
+      <tr><th>Fecha</th><td>{{ reporte.fecha }}</td></tr>
+      <tr><th>Estado actual</th><td class="estado-{{ reporte.estado }}">{{ reporte.estado }}</td></tr>
+      <tr><th>Ciudadano</th><td>{{ reporte.ciudadano.nombre }} — {{ reporte.ciudadano.telefono }}</td></tr>
+    </table>
+
+    <!-- Corrección #9: formulario de respuesta (solo admin llega aquí) -->
+    <h2>Registrar respuesta</h2>
+    <form method="POST">
+      <label>Respuesta:</label>
+      <textarea name="respuesta" rows="4" placeholder="Escribe la respuesta al ciudadano...">{{ reporte.respuesta or '' }}</textarea>
+      <label>Cambiar estado:</label>
+      <select name="estado">
+        <option value="pendiente"  {% if reporte.estado == 'pendiente'  %}selected{% endif %}>Pendiente</option>
+        <option value="en proceso" {% if reporte.estado == 'en proceso' %}selected{% endif %}>En proceso</option>
+        <option value="resuelto"   {% if reporte.estado == 'resuelto'   %}selected{% endif %}>Resuelto</option>
+      </select>
+      <button type="submit">Guardar respuesta</button>
+    </form>
+    <a class="back" href="/reportes">← Volver a reportes</a>
+  </div>
+</body>
+</html>

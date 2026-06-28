@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ECORuta — Rutas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>🌿 ECORuta — Lista de rutas</h1>
+    <!-- Corrección #12 -->
+    <div class="header-user">
+      👤 <strong>{{ usuario }}</strong>
+      <span class="badge-rol">{{ rol }}</span>
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="container">
+    <h2>Rutas registradas</h2>
+    {% if rol == "admin" %}
+      <a class="btn-verde" href="/agregar_ruta">＋ Agregar nueva ruta</a>
+    {% endif %}
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Zona</th>
+          <th>Horario</th>
+          <!-- Corrección #8: mostrar colonias y distancia/frecuencia -->
+          <th>Colonias</th>
+          <th>Frecuencia</th>
+          <th>Distancia (km)</th>
+          {% if rol == "admin" %}<th>Acciones</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rutas %}
+        <tr>
+          <td>{{ r.nombre }}</td>
+          <td>{{ r.zona }}</td>
+          <td>{{ r.horario }}</td>
+          <td>{{ r.colonias }}</td>
+          <td>{{ r.frecuencia or '—' }}</td>
+          <td>{{ r.distancia or '—' }}</td>
+          {% if rol == "admin" %}
+          <td>
+            <a class="btn-edit" href="/editar_ruta/{{ r._id }}">✏️ Editar</a>
+            <!-- Corrección #3: eliminar con POST en vez de GET -->
+            <form method="POST" action="/eliminar_ruta/{{ r._id }}" style="display:inline"
+                  onsubmit="return confirm('¿Eliminar esta ruta?')">
+              <button class="btn-del" type="submit">🗑️ Eliminar</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="empty">No hay rutas registradas.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Corrección #17: paginación -->
+    <div class="paginacion">
+      {% if page > 1 %}
+        <a href="/rutas?page={{ page - 1 }}" class="btn-page">← Anterior</a>
+      {% endif %}
+      <span>Página {{ page }} de {{ pages }}</span>
+      {% if page < pages %}
+        <a href="/rutas?page={{ page + 1 }}" class="btn-page">Siguiente →</a>
+      {% endif %}
+    </div>
+
+    <a class="back" href="/">← Volver al inicio</a>
+  </div>
+</body>
+</html>

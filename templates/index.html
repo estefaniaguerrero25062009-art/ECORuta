@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ECORuta — Inicio</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <!-- Corrección #12: mostrar nombre del usuario autenticado en la barra superior -->
+    <h1>🌿 ECORuta</h1>
+    <div class="header-user">
+      👤 <strong>{{ usuario }}</strong>
+      <span class="badge-rol">{{ rol }}</span>
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="container">
+    <h2>Panel principal</h2>
+    <div class="menu-grid">
+      <a class="menu-card" href="/rutas">
+        <span class="menu-icon">🗺️</span>
+        <span>Ver rutas</span>
+      </a>
+      <a class="menu-card" href="/buscar_ruta">
+        <span class="menu-icon">🔍</span>
+        <span>Buscar ruta</span>
+      </a>
+      <a class="menu-card" href="/reportes">
+        <span class="menu-icon">📋</span>
+        <span>Reportes</span>
+      </a>
+      {% if rol == "admin" %}
+      <a class="menu-card" href="/agregar_ruta">
+        <span class="menu-icon">➕</span>
+        <span>Agregar ruta</span>
+      </a>
+      {% endif %}
+      <a class="menu-card" href="/agregar_reporte">
+        <span class="menu-icon">📝</span>
+        <span>Nuevo reporte</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

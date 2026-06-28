@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ECORuta — Reportes ciudadanos</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>🌿 ECORuta — Reportes ciudadanos</h1>
+    <!-- Corrección #12: nombre usuario en header -->
+    <div class="header-user">
+      👤 <strong>{{ usuario }}</strong>
+      <span class="badge-rol">{{ rol }}</span>
+      <a href="/logout" class="btn-logout">Cerrar sesión</a>
+    </div>
+  </div>
+  <div class="container">
+    <!-- Corrección #11: ciudadano solo ve sus propios reportes (filtrado en app.py) -->
+    <h2>
+      {% if rol == "ciudadano" %}Mis reportes{% else %}Reportes de la comunidad{% endif %}
+    </h2>
+    <a class="btn-verde" href="/agregar_reporte">＋ Agregar reporte</a>
+    <table>
+      <thead>
+        <tr>
+          <th>Colonia</th>
+          <th>Descripción</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Ciudadano</th>
+          <!-- Corrección #10: columna respuesta para que ciudadano vea la respuesta -->
+          <th>Respuesta</th>
+          {% if rol == "admin" %}<th>Acción</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reportes %}
+        <tr>
+          <td>{{ r.colonia }}</td>
+          <td>{{ r.descripcion }}</td>
+          <td>{{ r.fecha }}</td>
+          <td class="estado-{{ r.estado }}">{{ r.estado }}</td>
+          <td>{{ r.ciudadano.nombre }}</td>
+          <!-- Corrección #10: mostrar respuesta del admin -->
+          <td>{{ r.respuesta if r.respuesta else '—' }}</td>
+          {% if rol == "admin" %}
+          <td>
+            <!-- Corrección #9: solo admin puede responder -->
+            <a class="btn-edit" href="/responder_reporte/{{ r._id }}">💬 Responder</a>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="empty">No hay reportes registrados aún.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- Corrección #17: paginación -->
+    <div class="paginacion">
+      {% if page > 1 %}
+        <a href="/reportes?page={{ page - 1 }}" class="btn-page">← Anterior</a>
+      {% endif %}
+      <span>Página {{ page }} de {{ pages }}</span>
+      {% if page < pages %}
+        <a href="/reportes?page={{ page + 1 }}" class="btn-page">Siguiente →</a>
+      {% endif %}
+    </div>
+
+    <a class="back" href="/">← Volver al inicio</a>
+  </div>
+</body>
+</html>
