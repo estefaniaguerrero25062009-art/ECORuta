@@ -1,4 +1,6 @@
 import os
+import certifi
+import base64
 from bson.objectid import ObjectId
 from bson.errors import InvalidId
 from flask import Flask, render_template, request, redirect, url_for, session, flash
@@ -12,26 +14,21 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "ecoruta2026secretkey")
 
-# ── Corrección #1: nombre de base de datos corregido a ecoruta_sql → ecoruta_nosql ──
-# ── Corrección #4: contraseña movida a variable de entorno (.env) ──────────────────
-MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://gurn090625mmcrmla1_db_user:l4KpRbW3vJjaMvlb@cluster0.lqt9mjt.mongodb.net/")
-client = MongoClient(MONGO_URI, server_api=ServerApi("1"))
+MONGO_URI = os.environ.get("MONGO_URI", "mongodb+srv://gurn090625mmcrmla1_db_user:ecoruta123@cluster0.lqt9mjt.mongodb.net/ecoruta_nosql?retryWrites=true&w=majority")
+client = MongoClient(MONGO_URI, server_api=ServerApi("1"), tlsCAFile=certifi.where(), tls=True)
 
-db       = client["ecoruta_nosql"]   # #1 corrección: antes era ecoruta_sql
+db       = client["ecoruta_nosql"]
 rutas    = db["rutas"]
 reportes = db["reportes_ciudadanos"]
 
-# Número de registros por página
 PER_PAGE = 5
 
-# ── usuarios fijos ─────────────────────────────────────────────────────────
 USUARIOS = {
     "admin":     {"password": "ecoruta2026", "rol": "admin"},
     "ciudadano": {"password": "ecoruta2026", "rol": "ciudadano"}
 }
 
 
-# ── decoradores ────────────────────────────────────────────────────────────
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -52,7 +49,6 @@ def admin_required(f):
     return decorated
 
 
-# ── login / logout ─────────────────────────────────────────────────────────
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = ""
@@ -75,7 +71,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ── index ──────────────────────────────────────────────────────────────────
 @app.route("/")
 @login_required
 def index():
@@ -84,31 +79,24 @@ def index():
                            rol=session["rol"])
 
 
-# ── rutas ──────────────────────────────────────────────────────────────────
 @app.route("/agregar_ruta", methods=["GET", "POST"])
 @admin_required
 def agregar_ruta():
     if request.method == "POST":
-        # ── Corrección #6: validar campos vacíos antes de insertar ──
-        nombre   = request.form.get("nombre", "").strip()
-        zona     = request.form.get("zona", "").strip()
-        horario  = request.form.get("horario", "").strip()
-        colonias = request.form.get("colonias", "").strip()
+        nombre     = request.form.get("nombre", "").strip()
+        zona       = request.form.get("zona", "").strip()
+        horario    = request.form.get("horario", "").strip()
+        colonias   = request.form.get("colonias", "").strip()
         frecuencia = request.form.get("frecuencia", "").strip()
         distancia  = request.form.get("distancia", "").strip()
 
         if not all([nombre, zona, horario, colonias]):
             return render_template("agregar_ruta.html", error="Todos los campos son obligatorios.")
 
-        nueva = {
-            "nombre":    nombre,
-            "zona":      zona,
-            "horario":   horario,
-            "colonias":  colonias,
-            "frecuencia": frecuencia,   # #8 colonias y calles dentro de cada ruta
-            "distancia":  distancia,
-        }
-        rutas.insert_one(nueva)
+        rutas.insert_one({
+            "nombre": nombre, "zona": zona, "horario": horario,
+            "colonias": colonias, "frecuencia": frecuencia, "distancia": distancia,
+        })
         return redirect(url_for("ver_rutas"))
     return render_template("agregar_ruta.html")
 
@@ -116,23 +104,18 @@ def agregar_ruta():
 @app.route("/rutas")
 @login_required
 def ver_rutas():
-    # ── Corrección #17: paginación en ver_rutas ──
     page  = int(request.args.get("page", 1))
     total = rutas.count_documents({})
-    pages = max(1, -(-total // PER_PAGE))  # ceil
+    pages = max(1, -(-total // PER_PAGE))
     skip  = (page - 1) * PER_PAGE
     lista = list(rutas.find().skip(skip).limit(PER_PAGE))
-    return render_template("rutas.html",
-                           rutas=lista,
-                           rol=session["rol"],
-                           usuario=session["usuario"],
-                           page=page, pages=pages)
+    return render_template("rutas.html", rutas=lista, rol=session["rol"],
+                           usuario=session["usuario"], page=page, pages=pages)
 
 
 @app.route("/editar_ruta/<id>", methods=["GET", "POST"])
 @admin_required
 def editar_ruta(id):
-    # ── Corrección #5: manejar InvalidId ──
     try:
         oid = ObjectId(id)
     except InvalidId:
@@ -143,11 +126,10 @@ def editar_ruta(id):
         return redirect(url_for("ver_rutas"))
 
     if request.method == "POST":
-        # ── Corrección #6: validar campos vacíos ──
-        nombre   = request.form.get("nombre", "").strip()
-        zona     = request.form.get("zona", "").strip()
-        horario  = request.form.get("horario", "").strip()
-        colonias = request.form.get("colonias", "").strip()
+        nombre     = request.form.get("nombre", "").strip()
+        zona       = request.form.get("zona", "").strip()
+        horario    = request.form.get("horario", "").strip()
+        colonias   = request.form.get("colonias", "").strip()
         frecuencia = request.form.get("frecuencia", "").strip()
         distancia  = request.form.get("distancia", "").strip()
 
@@ -156,21 +138,15 @@ def editar_ruta(id):
                                    error="Todos los campos son obligatorios.",
                                    usuario=session["usuario"], rol=session["rol"])
 
-        datos = {
-            "nombre":    nombre,
-            "zona":      zona,
-            "horario":   horario,
-            "colonias":  colonias,
-            "frecuencia": frecuencia,
-            "distancia":  distancia,
-        }
-        rutas.update_one({"_id": oid}, {"$set": datos})
+        rutas.update_one({"_id": oid}, {"$set": {
+            "nombre": nombre, "zona": zona, "horario": horario,
+            "colonias": colonias, "frecuencia": frecuencia, "distancia": distancia,
+        }})
         return redirect(url_for("ver_rutas"))
     return render_template("editar_ruta.html", ruta=ruta,
                            usuario=session["usuario"], rol=session["rol"])
 
 
-# ── Corrección #3: eliminar_ruta cambiado de GET a POST con confirmación ──
 @app.route("/eliminar_ruta/<id>", methods=["POST"])
 @admin_required
 def eliminar_ruta(id):
@@ -182,7 +158,6 @@ def eliminar_ruta(id):
     return redirect(url_for("ver_rutas"))
 
 
-# ── Corrección #16: buscar_ruta ampliado: filtrar por nombre y por colonia además de zona ──
 @app.route("/buscar_ruta", methods=["GET", "POST"])
 @login_required
 def buscar_ruta():
@@ -193,29 +168,20 @@ def buscar_ruta():
         if valor:
             regex = {"$regex": valor, "$options": "i"}
             resultados = list(rutas.find({
-                "$or": [
-                    {"zona":     regex},
-                    {"nombre":   regex},
-                    {"colonias": regex},
-                ]
+                "$or": [{"zona": regex}, {"nombre": regex}, {"colonias": regex}]
             }))
         if not resultados:
             mensaje = "No se encontraron rutas con ese criterio."
-    return render_template("buscar_ruta.html",
-                           resultados=resultados,
-                           mensaje=mensaje,
-                           rol=session["rol"],
+    return render_template("buscar_ruta.html", resultados=resultados,
+                           mensaje=mensaje, rol=session["rol"],
                            usuario=session["usuario"])
 
 
-# ── reportes ───────────────────────────────────────────────────────────────
 @app.route("/reportes")
 @login_required
 def ver_reportes():
-    # ── Corrección #11: ciudadano solo ve sus propios reportes ──
-    # ── Corrección #17: paginación en ver_reportes ──────────────
-    page = int(request.args.get("page", 1))
-    rol  = session.get("rol")
+    page    = int(request.args.get("page", 1))
+    rol     = session.get("rol")
     usuario = session.get("usuario")
 
     filtro = {}
@@ -227,18 +193,14 @@ def ver_reportes():
     skip  = (page - 1) * PER_PAGE
     lista = list(reportes.find(filtro).skip(skip).limit(PER_PAGE))
 
-    return render_template("reportes.html",
-                           reportes=lista,
-                           rol=rol,
-                           usuario=usuario,
-                           page=page, pages=pages)
+    return render_template("reportes.html", reportes=lista, rol=rol,
+                           usuario=usuario, page=page, pages=pages)
 
 
 @app.route("/agregar_reporte", methods=["GET", "POST"])
 @login_required
 def agregar_reporte():
     if request.method == "POST":
-        # ── Corrección #6: validar campos vacíos ──
         colonia     = request.form.get("colonia", "").strip()
         descripcion = request.form.get("descripcion", "").strip()
         fecha       = request.form.get("fecha", "").strip()
@@ -250,16 +212,28 @@ def agregar_reporte():
                                    error="Todos los campos son obligatorios.",
                                    usuario=session["usuario"], rol=session["rol"])
 
+        # Procesar imagen si se subió
+        imagen_b64 = None
+        imagen_tipo = None
+        archivo = request.files.get("imagen")
+        if archivo and archivo.filename != "":
+            datos = archivo.read()
+            if len(datos) > 2 * 1024 * 1024:  # límite 2MB
+                return render_template("agregar_reporte.html",
+                                       error="La imagen no debe superar 2MB.",
+                                       usuario=session["usuario"], rol=session["rol"])
+            imagen_b64  = base64.b64encode(datos).decode("utf-8")
+            imagen_tipo = archivo.mimetype  # ej. image/jpeg
+
         nuevo = {
-            "colonia":     colonia,
-            "descripcion": descripcion,
-            "fecha":       fecha,
-            "estado":      "pendiente",
+            "colonia": colonia, "descripcion": descripcion, "fecha": fecha,
+            "estado": "pendiente",
             "ciudadano": {
-                "nombre":   nombre,
-                "telefono": telefono,
-                "usuario":  session["usuario"],   # guardar quién reportó
-            }
+                "nombre": nombre, "telefono": telefono,
+                "usuario": session["usuario"],
+            },
+            "imagen":      imagen_b64,
+            "imagen_tipo": imagen_tipo,
         }
         reportes.insert_one(nuevo)
         return redirect(url_for("ver_reportes"))
@@ -267,8 +241,6 @@ def agregar_reporte():
                            usuario=session["usuario"], rol=session["rol"])
 
 
-# ── Corrección #9: solo admin puede responder reportes ─────────────────────
-# ── Corrección #10: vista de respuesta para que ciudadano la vea ───────────
 @app.route("/responder_reporte/<id>", methods=["GET", "POST"])
 @admin_required
 def responder_reporte(id):
@@ -282,20 +254,26 @@ def responder_reporte(id):
         return redirect(url_for("ver_reportes"))
 
     if request.method == "POST":
-        respuesta = request.form.get("respuesta", "").strip()
-        estado    = request.form.get("estado", "pendiente")
         reportes.update_one({"_id": oid}, {"$set": {
-            "respuesta": respuesta,
-            "estado":    estado
+            "respuesta": request.form.get("respuesta", "").strip(),
+            "estado":    request.form.get("estado", "pendiente")
         }})
         return redirect(url_for("ver_reportes"))
 
-    return render_template("responder_reporte.html",
-                           reporte=reporte,
-                           usuario=session["usuario"],
-                           rol=session["rol"])
+    return render_template("responder_reporte.html", reporte=reporte,
+                           usuario=session["usuario"], rol=session["rol"])
 
 
-# ── Corrección #7: debug=False en producción ───────────────────────────────
+@app.route("/eliminar_reporte/<id>", methods=["POST"])
+@admin_required
+def eliminar_reporte(id):
+    try:
+        oid = ObjectId(id)
+    except InvalidId:
+        return redirect(url_for("ver_reportes"))
+    reportes.delete_one({"_id": oid})
+    return redirect(url_for("ver_reportes"))
+
+
 if __name__ == "__main__":
     app.run(debug=False)

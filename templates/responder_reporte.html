@@ -24,7 +24,13 @@
       <tr><th>Ciudadano</th><td>{{ reporte.ciudadano.nombre }} — {{ reporte.ciudadano.telefono }}</td></tr>
     </table>
 
-    <!-- Corrección #9: formulario de respuesta (solo admin llega aquí) -->
+    {% if reporte.imagen %}
+    <h2>Imagen del problema</h2>
+    <img src="data:{{ reporte.imagen_tipo }};base64,{{ reporte.imagen }}"
+         alt="Imagen del reporte"
+         style="max-width:100%; max-height:400px; border-radius:10px; margin-bottom:16px;">
+    {% endif %}
+
     <h2>Registrar respuesta</h2>
     <form method="POST">
       <label>Respuesta:</label>

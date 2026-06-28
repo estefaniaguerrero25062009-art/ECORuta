@@ -19,7 +19,7 @@
   <div class="container">
     <h2>Nuevo reporte ciudadano</h2>
     {% if error %}<p class="mensaje-error">{{ error }}</p>{% endif %}
-    <form method="POST">
+    <form method="POST" enctype="multipart/form-data">
       <label>Colonia:</label>
       <input type="text" name="colonia" placeholder="Ej. Col. Hidalgo" required>
       <label>Descripción del problema:</label>
@@ -30,6 +30,8 @@
       <input type="text" name="nombre" placeholder="Nombre completo" required>
       <label>Teléfono:</label>
       <input type="text" name="telefono" placeholder="Ej. 7121000001" required>
+      <label>Imagen del problema (opcional, máx. 2MB):</label>
+      <input type="file" name="imagen" accept="image/*">
       <button type="submit">Enviar reporte</button>
     </form>
     <a class="back" href="/reportes">← Volver a reportes</a>
